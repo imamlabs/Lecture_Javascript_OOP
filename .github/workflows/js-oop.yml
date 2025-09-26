@@ -28,7 +28,7 @@ jobs:
           - dir: Pertemuan07
             entry: Main.js
           - dir: Pertemuan08
-            skip: true              # hanya README
+            skip: true
           - dir: Pertemuan09
             entry: Main.js
           - dir: Pertemuan10
@@ -37,7 +37,7 @@ jobs:
             entry: Main.js
           - dir: Pertemuan12
             entry: Main.js
-            demo: true              # set DEMO=1 agar tidak menunggu input
+            demo: true          # set DEMO=1 biar tidak menunggu input
           - dir: Pertemuan13
             entry: Main.js
           - dir: Pertemuan14
@@ -51,13 +51,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Tanpa cache: tidak memerlukan lock file
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      # Kalau repo menyimpan folder hasil zip (js-oop-multifile) sebagai root, deteksi otomatis
       - name: Resolve base dir
         id: basedir
         run: |
@@ -102,7 +101,7 @@ jobs:
             exit 3
           fi
 
-          # Pertemuan12 memiliki mode DEMO agar tidak menunggu input
+          # Mode demo untuk Pertemuan12 agar tidak hang
           if [ "${{ matrix.demo }}" = "true" ]; then
             export DEMO=1
           fi
