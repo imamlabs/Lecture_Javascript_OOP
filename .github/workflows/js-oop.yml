@@ -1,0 +1,119 @@
+name: JS OOP - Latihan per Pertemuan
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run-pertemuan:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dir: Pertemuan01
+            entry: HelloWorld.js
+          - dir: Pertemuan02
+            entry: Main.js
+          - dir: Pertemuan03
+            entry: Main.js
+          - dir: Pertemuan04
+            entry: Main.js
+          - dir: Pertemuan05
+            entry: Main.js
+          - dir: Pertemuan06
+            entry: Main.js
+          - dir: Pertemuan07
+            entry: Main.js
+          - dir: Pertemuan08
+            skip: true              # hanya README
+          - dir: Pertemuan09
+            entry: Main.js
+          - dir: Pertemuan10
+            entry: Main.js
+          - dir: Pertemuan11
+            entry: Main.js
+          - dir: Pertemuan12
+            entry: Main.js
+            demo: true              # set DEMO=1 agar tidak menunggu input
+          - dir: Pertemuan13
+            entry: Main.js
+          - dir: Pertemuan14
+            entry: Main.js
+          - dir: Pertemuan15
+            entry: Main.js
+          - dir: Pertemuan16
+            entry: App.js
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # Kalau repo menyimpan folder hasil zip (js-oop-multifile) sebagai root, deteksi otomatis
+      - name: Resolve base dir
+        id: basedir
+        run: |
+          if [ -d "js-oop-multifile" ]; then
+            BD="js-oop-multifile"
+          else
+            BD="."
+          fi
+          echo "value=$BD" >> "$GITHUB_OUTPUT"
+          echo "Using BASE_DIR=$BD"
+
+      - name: Skip marker
+        if: ${{ matrix.skip || false }}
+        run: echo "Skipping ${{ matrix.dir }} (no runnable JS)"
+
+      - name: List folder (debug)
+        if: ${{ !(matrix.skip || false) }}
+        run: |
+          echo "Workspace root:"
+          ls -la
+          echo "Listing ${{ steps.basedir.outputs.value }}/${{ matrix.dir }}:"
+          ls -la "${{ steps.basedir.outputs.value }}/${{ matrix.dir }}" || true
+
+      - name: Run ${{ matrix.dir }} -> ${{ matrix.entry }}
+        if: ${{ !(matrix.skip || false) }}
+        shell: bash
+        run: |
+          set -e
+          BASE="${{ steps.basedir.outputs.value }}"
+          RUN_DIR="$BASE/${{ matrix.dir }}"
+          ENTRY="${{ matrix.entry }}"
+
+          if [ ! -d "$RUN_DIR" ]; then
+            echo "Folder tidak ditemukan: $RUN_DIR"
+            exit 2
+          fi
+          cd "$RUN_DIR"
+
+          if [ -n "$ENTRY" ] && [ ! -f "$ENTRY" ]; then
+            echo "Entry file tidak ditemukan: $RUN_DIR/$ENTRY"
+            ls -la
+            exit 3
+          fi
+
+          # Pertemuan12 memiliki mode DEMO agar tidak menunggu input
+          if [ "${{ matrix.demo }}" = "true" ]; then
+            export DEMO=1
+          fi
+
+          node "$ENTRY"
+
+      - name: Upload output (opsional)
+        if: ${{ always() && !(matrix.skip || false) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-${{ matrix.dir }}
+          path: |
+            ${{ steps.basedir.outputs.value }}/${{ matrix.dir }}/output*.txt
+          if-no-files-found: ignore
